@@ -92,15 +92,18 @@ if __name__ == '__main__':
     results = []
     i = 10
     for _ in range(i):
+        # Prover sends generated x
+        # Android  --(x)-->  Serwer
+        x = prover.gen_x()
         # Verifier chooses vector 'a' of len(secret) or len(public_key) with {0, 1} values
         # Serwer  --(a)-->  Android
         a = verifier.gen_a()
-        # Prover sends generated x, and computed y values
-        # Android  --(x, y)--> Serwer
-        x = prover.gen_x()
+        # Prover computes y value, and sends it
+        # Android  --(y)-->  Serwer
         y = prover.compute_y(a)
         # Verification step
-        # Serwer weryfikuje y +     Serwer  --(komunikat, że chce powtórzyć kroki weryfikacji, lub czy udało się zalogować)-->  Android
+        # Serwer weryfikuje y +     
+        # Serwer  --(komunikat, że chce powtórzyć kroki weryfikacji, lub czy udało się zalogować)-->  Android
         is_verified = verifier.verify_y(x, y)
         results.append(is_verified)
     
