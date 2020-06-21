@@ -2,6 +2,7 @@ from random import randint, randrange
 from functools import reduce
 
 # p = 39769, q = 50423,     N = 2005272287
+# p = 131    q = 239, 
 # https://medium.com/asecuritysite-when-bob-met-alice/feige-fiat-shamir-and-zero-knowledge-proof-cdd2a972237c
 # https://en.wikipedia.org/wiki/Feige%E2%80%93Fiat%E2%80%93Shamir_identification_scheme
 
@@ -20,7 +21,9 @@ class Prover:
         self._r = None
 
     def gen_x(self):
-        r = randint(1, 39768)
+        r = randint(1, self.N)
+        while self.N % r == 0:
+            r = randint(1, self.N)
         self._r = r
         x = (r**2) % self.N
         return x
@@ -34,6 +37,7 @@ class Prover:
     def compute_public_key(self):
         """
         Compute list of s^2 % N for each s in secret
+        Dla każdego bajtu s w sekrecie
         """
         v = [(s**2) % self.N for s in self._secret]
         return v
@@ -67,27 +71,38 @@ def gen_rand_secret(size):
     return bytes([randint(0, 255) for _ in range(size)])
     
 if __name__ == '__main__':
-    p = 39769
-    q = 50423
+    # p = 39769
+    # q = 50423
+    p = 131
+    q = 239
     N = p * q
     secret = gen_rand_secret(10)
 
+    # ==== Rejestracja ====
     # Prover has his secret value and some N = prime1 * prime2
     prover = Prover(secret, N)
     public_key = prover.compute_public_key()
+    # prover._secret = gen_rand_secret(10)
     # Verifier knows prover's public key and the same N value 
     verifier = Verifier(public_key, N)
     # Next steps should be repeated i times
+    # =====================
+
+    # ==== Autoryzacja ====
     results = []
     i = 10
     for _ in range(i):
         # Verifier chooses vector 'a' of len(secret) or len(public_key) with {0, 1} values
+        # Serwer  --(a)-->  Android
         a = verifier.gen_a()
         # Prover sends generated x, and computed y values
+        # Android  --(x, y)--> Serwer
         x = prover.gen_x()
         y = prover.compute_y(a)
         # Verification step
+        # Serwer weryfikuje y +     Serwer  --(komunikat, że chce powtórzyć kroki weryfikacji, lub czy udało się zalogować)-->  Android
         is_verified = verifier.verify_y(x, y)
         results.append(is_verified)
     
     print(sum(results) == i)  # all values are True
+    # =====================
