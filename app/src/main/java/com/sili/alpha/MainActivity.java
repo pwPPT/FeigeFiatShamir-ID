@@ -34,9 +34,8 @@ import java.util.concurrent.TimeoutException;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String URL = "http://192.168.1.106:8000/api/ca/";
-//    private static final String URL = "http://10.0.2.2:8085/api/ca/";
-//    private static final long N = 131 * 239;
+    private static final String URL = "http://192.168.1.106:8000/api/ca/";   // FLASK APP
+//    private static final String URL = "http://10.0.2.2:8085/api/ca/";   // QUARKUS - docker
     private static final long N = 39769 * 50423;
 //    private static final long N = 1009 * 1019;
 
@@ -67,61 +66,4 @@ public class MainActivity extends AppCompatActivity {
         this.testAuthButton.setOnClickListener(v -> statusTextView.setText(""));
 
     }
-
-//    private void register() {
-//        Store store = new Store(this.getApplicationContext(), N);
-//        if(!store.hasPrivateKeyStored()) {
-//            store.generatePrivateKey();
-//        }
-//
-//        long[] pk = store.loadPrivateKey();
-//
-//        long[] publicKey = new long[pk.length];
-//        for(int i = 0; i < publicKey.length; i++) {
-//            publicKey[i] = (pk[i] * pk[i]) % N;
-//        }
-//
-//        String username = usernameEditText.getText().toString();
-//
-//        statusTextView.setText("Trying to register user '" + username + "' with public key: " + Arrays.toString(publicKey) + "\n");
-//        System.out.println("Trying to register user '" + username + "' with public key: " + Arrays.toString(publicKey) + "\n");
-//        // TODO - send POST request to URL+register with username and publicKey in body
-//
-//        try {
-//            HttpClient httpclient = new DefaultHttpClient();
-//            HttpPost request = new HttpPost(URL + "register");
-//
-//            StringBuilder payload = new StringBuilder("{\"username\": \"" + username + "\", \"public_key\": [" + publicKey[0]);
-//            for(int i = 1; i < publicKey.length; i++) {
-//                payload = payload.append("," + publicKey[i]);
-//            }
-//            payload = payload.append("]}");
-//
-//            String payloadStr = payload.toString();
-//            System.out.println(payloadStr);
-//            StringEntity entity = new StringEntity(payloadStr);
-//            request.setEntity(entity);
-//            request.setHeader("Accept", "application/json");
-//            request.setHeader("Content-type", "application/json");
-//
-//            HttpResponse response = httpclient.execute(request);
-//
-//            StatusLine statusLine = response.getStatusLine();
-//
-//            if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
-//                // success
-//                statusTextView.append(("User " + username + " created.\n"));
-//            } else {
-//                // fail
-//                int statusCode = statusLine.getStatusCode();
-//                //Closes the connection.
-//                response.getEntity().getContent().close();
-//                statusTextView.append(("Cannot register user " + username + "  [code: " + statusCode + "]\n"));
-//            }
-//        } catch(IOException e) {
-//            e.printStackTrace();
-//        } catch(Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
 }
