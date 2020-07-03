@@ -1,6 +1,7 @@
 package com.sili.alpha;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -19,12 +20,13 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class AuthenticationTask extends AsyncTask<Void, Void, String> {
 
-    private static final int N = 131 * 239;
+    private long N;
+    Context context;
 
     private String username;
     private HttpClient httpclient;
-    private int[] secret;
-    private int r;  // random value from getX()
+    private long[] secret;
+    private long r;  // random value from getX()
 
     @SuppressLint("StaticFieldLeak")
     EditText usernameEditText;
@@ -32,11 +34,13 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
     TextView statusTextView;
     String URL;
 
-    public AuthenticationTask(String URL, EditText usernameEditText, TextView statusTextView) {
+    public AuthenticationTask(String URL, long N, Context context, EditText usernameEditText, TextView statusTextView) {
         super();
         this.usernameEditText = usernameEditText;
         this.statusTextView = statusTextView;
         this.URL = URL;
+        this.N = N;
+        this.context = context;
     }
 
     private static class AuthFailedException extends Exception {
@@ -71,13 +75,20 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
         // Do before authentication task
         this.username = usernameEditText.getText().toString();
         this.httpclient = new DefaultHttpClient();
-        // TODO - load secret
-        this.secret = new int[]{10,10,10,10};
+
+        Store store = new Store(this.context, N);
+        this.secret = store.loadPrivateKey();
+
+        statusTextView.setText("Authenticating user '" + username + "'...\n");
     }
 
     @Override
     protected String doInBackground(Void... voids) {
         // Try to authenticate
+        if(this.secret == null) {
+            return null;
+        }
+
         try {
             String token = this.getToken();
             AuthResult res = new AuthResult(true, false, null);
@@ -96,9 +107,9 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
     protected void onPostExecute(String token) {
         // Do sth depending on the result
         if(token == null) { // AuthFailedException occurred
-            statusTextView.append("Authentication failed.");
+            statusTextView.append("Authentication failed.\n");
         }
-        statusTextView.append("Authentication succeed - token: " + token);
+        statusTextView.append("Authentication succeed - token: " + token + "\n");
         // TODO - add new activity and move to it
     }
 
@@ -136,6 +147,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
                 response.getEntity().writeTo(out);
                 String responseString = out.toString();
                 out.close();
+                statusTextView.append("token: " + responseString + "\n");
                 return responseString;
             } else {
                 int statusCode = statusLine.getStatusCode();
@@ -151,11 +163,12 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
 
     private int[] sendX(String token) throws AuthFailedException {
         // generate X value
-        this.r = ThreadLocalRandom.current().nextInt(1,  N + 1);
+        this.r = ThreadLocalRandom.current().nextLong(1,  N + 1);
         while(N % this.r == 0) {
-            this.r = ThreadLocalRandom.current().nextInt(1,  N + 1);
+            this.r = ThreadLocalRandom.current().nextLong(1,  N + 1);
         }
-        int X = (this.r * this.r) % N;
+        long X = (this.r * this.r) % N;
+        statusTextView.append("X: " + X + "\n");
 
         // send X
         String url = URL + "X";
@@ -190,16 +203,17 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
         }
     }
 
-    private AuthResult sendY(String token, int[] A, int[] secret) throws AuthFailedException {
+    private AuthResult sendY(String token, int[] A, long[] secret) throws AuthFailedException {
         // compute Y
         int[] results = new int[A.length];
-        int Y = 1;
+        long Y = 1;
         for(int i = 0; i < A.length; i++) {
             if(A[i] == 1) {
-                Y *= secret[i];
+                Y = Y * secret[i] % N;
             }
         }
         Y =  (Y * this.r) % N;
+        statusTextView.append("Y: " + Y + "\n");
 
         // send Y
         String url = URL + "Y";

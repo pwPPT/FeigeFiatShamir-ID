@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
@@ -32,6 +33,8 @@ import java.util.concurrent.TimeoutException;
 public class MainActivity extends AppCompatActivity {
 
     private static final String URL = "http://10.0.2.2:8085/api/ca/";
+//    private static final long N = 131 * 239;
+    private static final long N = 39769 * 50423;
 
     TextView statusTextView;
     Button registerButton;
@@ -45,117 +48,39 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         this.statusTextView = findViewById(R.id.statuesTextView);
-        this.statusTextView.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": Pending\n");
+        this.statusTextView.setText("");
 
         this.registerButton = findViewById(R.id.registerButton);
-        this.registerButton.setOnClickListener(v -> register(statusTextView));
+        this.registerButton.setOnClickListener(v -> register());
 
         this.authButton = findViewById(R.id.authButton);
-        this.authButton.setOnClickListener(v -> authenticate(statusTextView));
+        this.authButton.setOnClickListener(v -> new AuthenticationTask(URL, N, this.getApplicationContext(), usernameEditText, statusTextView).execute());
 
         this.usernameEditText = findViewById(R.id.userNameEditText);
 
         // Button for testing AuthenticationTask
         this.testAuthButton = findViewById(R.id.testButton);
-        this.testAuthButton.setOnClickListener(v -> new AuthenticationTask(URL, usernameEditText, statusTextView).execute());
+        this.testAuthButton.setOnClickListener(v -> statusTextView.setText(""));
 
     }
 
-    private void authenticate(TextView statusTextView) {
-        CompletableFuture<String> async_print = CompletableFuture.supplyAsync(
-                () -> {
-                    String username = this.usernameEditText.getText().toString();
-                    this.statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": Authentication attempt\n");
-                    return executeHttpGetRequest(username);
-                });
-
-        async_print
-                .thenAccept(status -> this.statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": " + status));
-
-        try {
-            async_print.get(1000, TimeUnit.MILLISECONDS);
-        } catch (ExecutionException | InterruptedException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            this.statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": TIMEOUT");
+    private void register() {
+        Store store = new Store(this.getApplicationContext(), N);
+        if(!store.hasPrivateKeyStored()) {
+            store.generatePrivateKey();
         }
-    }
 
-    private void register(TextView statusTextView) {
-        CompletableFuture<String> async_print = CompletableFuture.supplyAsync(
-                () -> {
-                    String username = this.usernameEditText.getText().toString();
-                    this.statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": Registration attempt\n");
-                    return executeHttpPostRequest(username);
-                });
+        long[] pk = store.loadPrivateKey();
 
-        async_print
-                .thenAccept(status -> this.statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": " + status));
-
-        try {
-            async_print.get(1000, TimeUnit.MILLISECONDS);
-        } catch (ExecutionException | InterruptedException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            this.statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": TIMEOUT");
+        long[] publicKey = new long[pk.length];
+        for(int i = 0; i < publicKey.length; i++) {
+            publicKey[i] = (pk[i] * pk[i]) % N;
         }
-    }
 
+        String username = usernameEditText.getText().toString();
 
-    private String executeHttpPostRequest(String username) {
-        try {
-            HttpClient httpclient = new DefaultHttpClient();
-            HttpPost request = new HttpPost(URL + "register");
-
-            String json = "{\"username\":\"" + username + "\"}";
-            StringEntity entity = new StringEntity(json);
-            request.setEntity(entity);
-            request.setHeader("Accept", "application/json");
-            request.setHeader("Content-type", "application/json");
-
-            HttpResponse response = httpclient.execute(request);
-            StatusLine statusLine = response.getStatusLine();
-
-            if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                response.getEntity().writeTo(out);
-                String responseString = out.toString();
-                out.close();
-                return "Registered user '" + username + "'\n";
-            } else {
-                System.out.println(statusLine.getStatusCode());
-                //Closes the connection.
-                response.getEntity().getContent().close();
-                throw new IOException(statusLine.getReasonPhrase());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return "Registration user '" + username + "' FAILED\n";
-    }
-
-    private String executeHttpGetRequest(String username) {
-        try {
-            HttpClient httpclient = new DefaultHttpClient();
-            HttpGet request = new HttpGet(URL + "auth/" + username);
-            HttpResponse response = httpclient.execute(request);
-            StatusLine statusLine = response.getStatusLine();
-
-            if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                response.getEntity().writeTo(out);
-                String responseString = out.toString();
-                out.close();
-                return responseString + "\n";
-            } else {
-                System.out.println(statusLine.getStatusCode());
-                //Closes the connection.
-                response.getEntity().getContent().close();
-                throw new IOException(statusLine.getReasonPhrase());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return "Auth for " + username + " FAILED";
+        statusTextView.setText("Trying to register user '" + username + "' with public key: " + Arrays.toString(publicKey) + "\n");
+        // TODO - send POST request to URL+register with username and publicKey in body
+        statusTextView.append("Success!");
     }
 }
