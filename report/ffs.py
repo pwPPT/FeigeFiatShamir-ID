@@ -65,6 +65,7 @@ class Verifier:
     def verify_y(self, x, y):
         values = [s**i for (s, i) in zip(self.public_key, self._a)]
         y1 = (x * reduce(lambda i, j: i * j, values)) % self.N
+        print(f'y1: {y1}   y2: {(y ** 2) % self.N}')
         return y1 == (y ** 2) % self.N
 
 def gen_rand_secret(size):

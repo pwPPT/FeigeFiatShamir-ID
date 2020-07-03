@@ -13,6 +13,9 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -96,6 +99,9 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
                 int[] A = sendX(token);
                 res = sendY(token, A, this.secret);
             }
+            if(!res.isAuthorized) {
+                throw new AuthFailedException(-100, "Wrong private key!");
+            }
             return res.sessionId;
         } catch(AuthFailedException e) {
             statusTextView.append(e.toString());
@@ -108,6 +114,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
         // Do sth depending on the result
         if(token == null) { // AuthFailedException occurred
             statusTextView.append("Authentication failed.\n");
+            return;
         }
         statusTextView.append("Authentication succeed - token: " + token + "\n");
         // TODO - add new activity and move to it
@@ -147,8 +154,13 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
                 response.getEntity().writeTo(out);
                 String responseString = out.toString();
                 out.close();
-                statusTextView.append("token: " + responseString + "\n");
-                return responseString;
+
+                // parse response
+                JSONObject resp = new JSONObject(responseString);
+                String token = resp.getString("token");
+
+                statusTextView.append("token: " + token + "\n");
+                return token;
             } else {
                 int statusCode = statusLine.getStatusCode();
                 //Closes the connection.
@@ -158,6 +170,9 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
         } catch(IOException e) {
             e.printStackTrace();
             throw new AuthFailedException(-2, URL + e.getMessage());
+        } catch(JSONException e) {
+            e.printStackTrace();
+            throw new AuthFailedException(-3, URL + e.getMessage());
         }
     }
 
@@ -183,14 +198,20 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
             StatusLine statusLine = response.getStatusLine();
 
             if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
-                // TODO - parse JSON response from format
-                // { "A": [... ints ...] }
-                // into int[]
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 response.getEntity().writeTo(out);
                 String responseString = out.toString();
                 out.close();
-                return new int[]{1, 1, 1, 1};
+
+                // parse response
+                JSONObject resp = new JSONObject(responseString);
+                JSONArray vec = resp.getJSONArray("A");
+
+                int[] A = new int[vec.length()];
+                for(int i = 0; i < vec.length(); i++) {
+                    A[i] = vec.getInt(i);
+                }
+                return A;
             } else {
                 int statusCode = statusLine.getStatusCode();
                 //Closes the connection.
@@ -200,6 +221,9 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
         } catch(IOException e) {
             e.printStackTrace();
             throw new AuthFailedException(-2, URL + e.getMessage());
+        } catch(JSONException e) {
+            e.printStackTrace();
+            throw new AuthFailedException(-3, URL + e.getMessage());
         }
     }
 
@@ -209,7 +233,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
         long Y = 1;
         for(int i = 0; i < A.length; i++) {
             if(A[i] == 1) {
-                Y = Y * secret[i] % N;
+                Y = (Y * secret[i]) % N;
             }
         }
         Y =  (Y * this.r) % N;
@@ -228,14 +252,17 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
             StatusLine statusLine = response.getStatusLine();
 
             if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
-                // TODO - parse JSON response from format
-                // { "repeat": boolean, is_authenticated: boolean, session_id: str }
-                // into AuthResult object
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 response.getEntity().writeTo(out);
                 String responseString = out.toString();
                 out.close();
-                return new AuthResult(false, true, token);
+
+                // parse response
+                JSONObject resp = new JSONObject(responseString);
+                boolean repeat = resp.getBoolean("repeat");
+                boolean isAuthenticated = resp.getBoolean("is_authenticated");
+                String sessionId = resp.getString("session_id");
+                return new AuthResult(repeat, isAuthenticated, sessionId);
             } else {
                 int statusCode = statusLine.getStatusCode();
                 //Closes the connection.
@@ -245,6 +272,9 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
         } catch(IOException e) {
             e.printStackTrace();
             throw new AuthFailedException(-2, URL + e.getMessage());
+        } catch(JSONException e) {
+            e.printStackTrace();
+            throw new AuthFailedException(-3, URL + e.getMessage());
         }
     }
 }
