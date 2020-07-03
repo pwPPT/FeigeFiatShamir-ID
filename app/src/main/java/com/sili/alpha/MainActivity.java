@@ -1,5 +1,6 @@
 package com.sili.alpha;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -21,8 +22,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -30,68 +33,71 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String URL = "http://10.0.2.2:8085/api/ca/";
 
+    TextView statusTextView;
+    Button registerButton;
+    Button authButton;
+    EditText usernameEditText;
+    Button testAuthButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        TextView statusTextView = findViewById(R.id.statuesTextView);
-        statusTextView.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": Pending\n");
+        this.statusTextView = findViewById(R.id.statuesTextView);
+        this.statusTextView.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": Pending\n");
 
-        final Button registerButton = findViewById(R.id.registerButton);
-        registerButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                register(statusTextView);
-            }
-        });
+        this.registerButton = findViewById(R.id.registerButton);
+        this.registerButton.setOnClickListener(v -> register(statusTextView));
 
-        final Button authButton = findViewById(R.id.authButton);
-        authButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                authenticate(statusTextView);
-            }
-        });
+        this.authButton = findViewById(R.id.authButton);
+        this.authButton.setOnClickListener(v -> authenticate(statusTextView));
 
+        this.usernameEditText = findViewById(R.id.userNameEditText);
+
+        // Button for testing AuthenticationTask
+        this.testAuthButton = findViewById(R.id.testButton);
+        this.testAuthButton.setOnClickListener(v -> new AuthenticationTask(URL, usernameEditText, statusTextView).execute());
 
     }
 
     private void authenticate(TextView statusTextView) {
         CompletableFuture<String> async_print = CompletableFuture.supplyAsync(
                 () -> {
-                    String username = ((EditText) findViewById(R.id.userNameEditText)).getText().toString();
-                    statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": Authentication attempt\n");
+                    String username = this.usernameEditText.getText().toString();
+                    this.statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": Authentication attempt\n");
                     return executeHttpGetRequest(username);
                 });
 
         async_print
-                .thenAccept(status -> statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": " + status));
+                .thenAccept(status -> this.statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": " + status));
 
         try {
             async_print.get(1000, TimeUnit.MILLISECONDS);
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         } catch (TimeoutException e) {
-            statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": TIMEOUT");
+            this.statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": TIMEOUT");
         }
     }
 
     private void register(TextView statusTextView) {
         CompletableFuture<String> async_print = CompletableFuture.supplyAsync(
                 () -> {
-                    String username = ((EditText) findViewById(R.id.userNameEditText)).getText().toString();
-                    statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": Registration attempt\n");
+                    String username = this.usernameEditText.getText().toString();
+                    this.statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": Registration attempt\n");
                     return executeHttpPostRequest(username);
                 });
 
         async_print
-                .thenAccept(status -> statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": " + status));
+                .thenAccept(status -> this.statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": " + status));
 
         try {
             async_print.get(1000, TimeUnit.MILLISECONDS);
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         } catch (TimeoutException e) {
-            statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": TIMEOUT");
+            this.statusTextView.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss")) + ": TIMEOUT");
         }
     }
 

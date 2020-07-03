@@ -72,4 +72,18 @@
         app:layout_constraintStart_toEndOf="@+id/registerButton"
         app:layout_constraintTop_toBottomOf="@+id/userNameEditText"
         app:layout_constraintVertical_bias="0.116" />
+
+    <Button
+        android:id="@+id/testButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="138dp"
+        android:layout_marginTop="29dp"
+        android:layout_marginEnd="138dp"
+        android:layout_marginBottom="32dp"
+        android:text="Test Auth Task"
+        app:layout_constraintBottom_toTopOf="@+id/textView2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/authButton" />
 </androidx.constraintlayout.widget.ConstraintLayout>
