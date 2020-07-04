@@ -36,14 +36,16 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
     @SuppressLint("StaticFieldLeak")
     TextView statusTextView;
     String URL;
+    Session session;
 
-    public AuthenticationTask(String URL, long N, Context context, EditText usernameEditText, TextView statusTextView) {
+    public AuthenticationTask(String URL, long N, Context context, Session session, EditText usernameEditText, TextView statusTextView) {
         super();
         this.usernameEditText = usernameEditText;
         this.statusTextView = statusTextView;
         this.URL = URL;
         this.N = N;
         this.context = context;
+        this.session = session;
     }
 
     private static class AuthFailedException extends Exception {
@@ -117,6 +119,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
             return;
         }
         statusTextView.append("Authentication succeed - token: " + token + "\n");
+        session.setSessionId(token);
         // TODO - add new activity and move to it
     }
 

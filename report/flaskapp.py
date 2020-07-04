@@ -23,13 +23,15 @@ X = None
 tries = randint(4, 8)
 positive_tries = 0
 
+token = 'UBUYYUHBI^&YHIUEI^@UDYUGKQ'
+
 @app.route(base_url + 'token', methods=['POST'])
 def token():
     data = json.loads(request.data)
 
     print(data)
     resp_body = {
-        'token': 'UBUYYUHBI^&YHIUEI^@UDYUGKQ'
+        'token': token
     }
     return jsonify(resp_body)
 
@@ -62,7 +64,7 @@ def y():
             resp_body = {
                 'repeat': False,
                 'is_authenticated': True,
-                'session_id': '*^BTIB&^i67u6btutbT^'
+                'session_id': token
             }
             return jsonify(resp_body)
         else:
@@ -93,3 +95,21 @@ def register():
 
     print(f'Registered  ===  User: {username}   -   PubKey: {pub_key}')
     return jsonify({})
+
+notes = []
+@app.route(base_url + 'notes', methods=['GET', 'POST'])
+def notes():
+    global notes, token
+    if request.method == 'GET':
+        return jsonify({
+            "notes": notes
+        })
+    else:
+        data = json.loads(request.data)
+        note = data['note']
+        session_id = data['session_id']
+        if session_id == token:
+            notes.append(note)
+            return jsonify({})
+        else:
+            return jsonify({})

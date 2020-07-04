@@ -39,16 +39,22 @@ public class MainActivity extends AppCompatActivity {
     private static final long N = 39769 * 50423;
 //    private static final long N = 1009 * 1019;
 
+    Session session;
+
     TextView statusTextView;
     Button registerButton;
     Button authButton;
     EditText usernameEditText;
     Button testAuthButton;
+    Button getButton;
+    Button postButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        this.session = new Session();
 
         this.statusTextView = findViewById(R.id.statuesTextView);
         this.statusTextView.setText("");
@@ -57,13 +63,20 @@ public class MainActivity extends AppCompatActivity {
         this.registerButton.setOnClickListener(v -> new RegisterTask(URL, N, this.getApplicationContext(), usernameEditText, statusTextView).execute());
 
         this.authButton = findViewById(R.id.authButton);
-        this.authButton.setOnClickListener(v -> new AuthenticationTask(URL, N, this.getApplicationContext(), usernameEditText, statusTextView).execute());
+        this.authButton.setOnClickListener(v -> new AuthenticationTask(URL, N, this.getApplicationContext(), session, usernameEditText, statusTextView).execute());
 
         this.usernameEditText = findViewById(R.id.userNameEditText);
 
         // Button for testing AuthenticationTask
         this.testAuthButton = findViewById(R.id.testButton);
         this.testAuthButton.setOnClickListener(v -> statusTextView.setText(""));
+
+        this.getButton = findViewById(R.id.getButton);
+        this.getButton.setOnClickListener(v -> new GetNotesTask(URL, session, statusTextView));
+
+        this.postButton = findViewById(R.id.postButton);
+        this.postButton.setOnClickListener(v -> new CreateNoteTask(URL, session, usernameEditText, statusTextView));
+
 
     }
 }
