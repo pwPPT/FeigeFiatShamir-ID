@@ -186,10 +186,10 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
             }
         } catch(IOException e) {
             e.printStackTrace();
-            throw new AuthFailedException(-2, URL + e.getMessage());
+            throw new AuthFailedException(-2, URL + "token\n");
         } catch(JSONException e) {
             e.printStackTrace();
-            throw new AuthFailedException(-3, URL + e.getMessage());
+            throw new AuthFailedException(-3, URL + "token\n");
         }
     }
 
