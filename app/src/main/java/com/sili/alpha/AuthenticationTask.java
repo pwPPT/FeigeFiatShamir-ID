@@ -63,7 +63,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
         }
 
         public String toString() {
-            return "Authentication failed."
+            return "Authentication failed.";
 //            return "AuthFailedException - code: " + this.statusCode + "   endpoint: " + this.endpoint;
         }
     }
