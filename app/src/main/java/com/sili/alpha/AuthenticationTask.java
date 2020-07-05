@@ -190,7 +190,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
 
         // send X
         String url = URL + "X";
-        String payload = "{\"token\":\"" + token + "\", \"X\":" + X + "}";
+        String payload = "{\"token\":\"" + token + "\", \"x\":" + X + "}";
 
         HttpResponse response = post(url, payload);
         if(response == null) {  // IOException occurred
@@ -208,7 +208,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
 
                 // parse response
                 JSONObject resp = new JSONObject(responseString);
-                JSONArray vec = resp.getJSONArray("A");
+                JSONArray vec = resp.getJSONArray("a");
 
                 int[] A = new int[vec.length()];
                 for(int i = 0; i < vec.length(); i++) {
@@ -244,7 +244,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
 
         // send Y
         String url = URL + "Y";
-        String payload = "{\"token\":\"" + token + "\", \"Y\":" + Y + "}";
+        String payload = "{\"token\":\"" + token + "\", \"y\":" + Y + "}";
 
         HttpResponse response = post(url, payload);
         if(response == null) {
@@ -261,6 +261,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
                 out.close();
 
                 // parse response
+                System.out.println(responseString);
                 JSONObject resp = new JSONObject(responseString);
                 boolean repeat = resp.getBoolean("repeat");
                 boolean isAuthenticated = resp.getBoolean("is_authenticated");

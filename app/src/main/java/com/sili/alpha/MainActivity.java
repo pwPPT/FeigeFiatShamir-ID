@@ -34,8 +34,9 @@ import java.util.concurrent.TimeoutException;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String URL = "http://192.168.1.106:8000/api/ca/";   // FLASK APP
-//    private static final String URL = "http://10.0.2.2:8085/api/ca/";   // QUARKUS - docker
+//    private static final String URL = "http://192.168.1.106:8000/api/ca/";   // FLASK APP
+//    private static final String URL = "https://10.0.2.2:8443/api/ca/";   // QUARKUS - docker
+    private static final String URL = "http://10.0.2.2:8085/api/ca/";   // QUARKUS - docker
     private static final long N = 39769 * 50423;
 //    private static final long N = 1009 * 1019;
 

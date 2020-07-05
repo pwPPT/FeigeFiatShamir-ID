@@ -23,15 +23,16 @@ X = None
 tries = randint(4, 8)
 positive_tries = 0
 
-token = 'UBUYYUHBI^&YHIUEI^@UDYUGKQ'
+auth_token = 'UBUYYUHBI^&YHIUEI^@UDYUGKQ'
 
 @app.route(base_url + 'token', methods=['POST'])
 def token():
+    global auth_token
     data = json.loads(request.data)
 
     print(data)
     resp_body = {
-        'token': token
+        'token': auth_token
     }
     return jsonify(resp_body)
 
@@ -39,11 +40,11 @@ def token():
 def x():
     data = json.loads(request.data)
     global X
-    X = data['X']
+    X = data['x']
     a = verifier.gen_a()
     print(f'X: {X}    A: {a}')
     resp_body = {
-        'A': a
+        'a': a
     }
     return jsonify(resp_body)
 
@@ -51,7 +52,7 @@ def x():
 def y():
     global positive_tries, tries
     data = json.loads(request.data)
-    Y = data['Y']
+    Y = data['y']
     print(f'Y: {Y}  X: {X}')
     is_verified = verifier.verify_y(X, Y)
     if is_verified:
@@ -64,7 +65,7 @@ def y():
             resp_body = {
                 'repeat': False,
                 'is_authenticated': True,
-                'session_id': token
+                'session_id': auth_token
             }
             return jsonify(resp_body)
         else:
@@ -99,7 +100,7 @@ def register():
 notes = []
 @app.route(base_url + 'notes', methods=['GET', 'POST'])
 def notes():
-    global notes, token
+    global notes, auth_token
     if request.method == 'GET':
         return jsonify({
             "notes": notes
@@ -108,7 +109,7 @@ def notes():
         data = json.loads(request.data)
         note = data['note']
         session_id = data['session_id']
-        if session_id == token:
+        if session_id == auth_token:
             notes.append(note)
             return jsonify({})
         else:
