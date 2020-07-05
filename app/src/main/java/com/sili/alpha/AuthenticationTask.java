@@ -3,6 +3,7 @@ package com.sili.alpha;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -19,6 +20,7 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class AuthenticationTask extends AsyncTask<Void, Void, String> {
@@ -30,6 +32,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
     private HttpClient httpclient;
     private long[] secret;
     private long r;  // random value from getX()
+    private List<Button> buttons;
 
     @SuppressLint("StaticFieldLeak")
     EditText usernameEditText;
@@ -38,7 +41,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
     String URL;
     Session session;
 
-    public AuthenticationTask(String URL, long N, Context context, Session session, EditText usernameEditText, TextView statusTextView) {
+    public AuthenticationTask(String URL, long N, Context context, Session session, EditText usernameEditText, TextView statusTextView, HttpClient httpclient, List<Button> buttons) {
         super();
         this.usernameEditText = usernameEditText;
         this.statusTextView = statusTextView;
@@ -46,6 +49,8 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
         this.N = N;
         this.context = context;
         this.session = session;
+        this.httpclient = httpclient;
+        this.buttons = buttons;
     }
 
     private static class AuthFailedException extends Exception {
@@ -77,12 +82,19 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
 
     @Override
     protected void onPreExecute() {
+        Utils.SetButtonsEnabled(buttons, false);
         // Do before authentication task
         this.username = usernameEditText.getText().toString();
-        this.httpclient = new DefaultHttpClient();
+        if(this.httpclient == null) {
+            this.httpclient = Utils.initHttpClient(context);
+        }
 
         Store store = new Store(this.context, N);
         this.secret = store.loadPrivateKey();
+
+        if(this.httpclient == null) {
+            this.httpclient = Utils.initHttpClient(context);
+        }
 
         statusTextView.setText("Authenticating user '" + username + "'...\n");
     }
@@ -120,6 +132,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
         }
         statusTextView.append("Authentication succeed - token: " + token + "\n");
         session.setSessionId(token);
+        Utils.SetButtonsEnabled(buttons, true);
         // TODO - add new activity and move to it
     }
 

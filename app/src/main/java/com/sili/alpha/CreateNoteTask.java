@@ -1,6 +1,8 @@
 package com.sili.alpha;
 
+import android.content.Context;
 import android.os.AsyncTask;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -12,6 +14,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import java.io.IOException;
+import java.util.List;
 
 public class CreateNoteTask extends AsyncTask<Void, Void, Boolean> {
 
@@ -19,25 +22,33 @@ public class CreateNoteTask extends AsyncTask<Void, Void, Boolean> {
     private String URL;
     private HttpClient httpclient;
     private Session session;
+    private Context context;
+    List<Button> buttons;
 
     private EditText noteEditText;
     private TextView statusTextView;
 
-    public CreateNoteTask(String URL, Session session, EditText noteEditText, TextView statusTextView) {
+    public CreateNoteTask(String URL, Session session, Context context, EditText noteEditText, TextView statusTextView, HttpClient httpclient, List<Button> buttons) {
         super();
         this.URL = URL;
         this.sessionId = session.getSessionId();
         this.session = session;
         this.noteEditText = noteEditText;
         this.statusTextView = statusTextView;
+        this.httpclient = httpclient;
+        this.context = context;
+        this.buttons = buttons;
     }
 
     @Override
     protected void onPreExecute() {
+        Utils.SetButtonsEnabled(buttons, false);
         // Do before task
         statusTextView.setText("Creating new note...\n");
 
-        this.httpclient = new DefaultHttpClient();
+        if(this.httpclient == null) {
+            this.httpclient = Utils.initHttpClient(context);
+        }
     }
 
     @Override
@@ -76,8 +87,9 @@ public class CreateNoteTask extends AsyncTask<Void, Void, Boolean> {
 
     @Override
     protected void onPostExecute(Boolean result) {
+        Utils.SetButtonsEnabled(buttons, true);
         if(result) {
-            new GetNotesTask(URL, session, statusTextView).execute();
+            new GetNotesTask(URL, session, context, statusTextView, httpclient, buttons).execute();
         }
     }
 }

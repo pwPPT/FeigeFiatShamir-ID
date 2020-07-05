@@ -1,46 +1,48 @@
 package com.sili.alpha;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
+import org.apache.http.HttpVersion;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
+import org.apache.http.client.params.HttpClientParams;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.params.ConnManagerParams;
+import org.apache.http.conn.params.ConnPerRoute;
+import org.apache.http.conn.params.ConnPerRouteBean;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.params.HttpProtocolParams;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.io.InputStream;
+import java.security.KeyStore;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.List;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManagerFactory;
 
 public class MainActivity extends AppCompatActivity {
 
 //    private static final String URL = "http://192.168.1.106:8000/api/ca/";   // FLASK APP
-//    private static final String URL = "https://10.0.2.2:8443/api/ca/";   // QUARKUS - docker
-    private static final String URL = "http://10.0.2.2:8085/api/ca/";   // QUARKUS - docker
+    private static final String URL = "https://10.0.2.2:8443/api/ca/";   // QUARKUS - docker
+//    private static final String URL = "http://10.0.2.2:8085/api/ca/";   // QUARKUS - docker
     private static final long N = 39769 * 50423;
 //    private static final long N = 1009 * 1019;
 
     Session session;
+    HttpClient httpclient;
 
     TextView statusTextView;
     Button registerButton;
@@ -55,29 +57,44 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        this.httpclient = Utils.initHttpClient(this.getApplicationContext());
+
         this.session = new Session();
 
         this.statusTextView = findViewById(R.id.statuesTextView);
+        this.registerButton = findViewById(R.id.registerButton);
+        this.authButton = findViewById(R.id.authButton);
+        this.usernameEditText = findViewById(R.id.userNameEditText);
+        this.testAuthButton = findViewById(R.id.testButton);
+        this.getButton = findViewById(R.id.getButton);
+        this.postButton = findViewById(R.id.postButton);
+
+        List<Button> buttons = new ArrayList<>();
+        buttons.add(registerButton);
+        buttons.add(authButton);
+        buttons.add(testAuthButton);
+        buttons.add(getButton);
+        buttons.add(postButton);
+
         this.statusTextView.setText("");
 
-        this.registerButton = findViewById(R.id.registerButton);
-        this.registerButton.setOnClickListener(v -> new RegisterTask(URL, N, this.getApplicationContext(), usernameEditText, statusTextView).execute());
+        this.registerButton.setOnClickListener(v -> new RegisterTask(URL, N, this.getApplicationContext(), usernameEditText, statusTextView, httpclient, buttons).execute());
 
-        this.authButton = findViewById(R.id.authButton);
-        this.authButton.setOnClickListener(v -> new AuthenticationTask(URL, N, this.getApplicationContext(), session, usernameEditText, statusTextView).execute());
+        this.authButton.setOnClickListener(v -> new AuthenticationTask(URL, N, this.getApplicationContext(), session, usernameEditText, statusTextView, httpclient, buttons).execute());
 
-        this.usernameEditText = findViewById(R.id.userNameEditText);
-
-        // Button for testing AuthenticationTask
-        this.testAuthButton = findViewById(R.id.testButton);
         this.testAuthButton.setOnClickListener(v -> statusTextView.setText(""));
 
-        this.getButton = findViewById(R.id.getButton);
-        this.getButton.setOnClickListener(v -> new GetNotesTask(URL, session, statusTextView));
+        this.getButton.setOnClickListener(v -> new GetNotesTask(URL, session, this.getApplicationContext(), statusTextView, httpclient, buttons));
 
-        this.postButton = findViewById(R.id.postButton);
-        this.postButton.setOnClickListener(v -> new CreateNoteTask(URL, session, usernameEditText, statusTextView));
-
+        this.postButton.setOnClickListener(v -> new CreateNoteTask(URL, session, this.getApplicationContext(), usernameEditText, statusTextView, httpclient, buttons));
 
     }
+
+    protected void setButtonsEnabled(boolean isEnabled) {
+        registerButton.setEnabled(isEnabled);
+        authButton.setEnabled(isEnabled);
+        testAuthButton.setEnabled(isEnabled);
+        getButton.setEnabled(isEnabled);
+    }
+
 }

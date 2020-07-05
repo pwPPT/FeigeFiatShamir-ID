@@ -3,6 +3,7 @@ package com.sili.alpha;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -16,6 +17,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 public class RegisterTask extends AsyncTask<Void, Void, Void> {
 
@@ -23,6 +25,8 @@ public class RegisterTask extends AsyncTask<Void, Void, Void> {
     long N;
     String username;
     long[] publicKey;
+    HttpClient httpclient;
+    List<Button> buttons;
 
     @SuppressLint("StaticFieldLeak")
     EditText usernameEditText;
@@ -30,17 +34,20 @@ public class RegisterTask extends AsyncTask<Void, Void, Void> {
     TextView statusTextView;
     String URL;
 
-    public RegisterTask(String URL, long N, Context context, EditText usernameEditText, TextView statusTextView) {
+    public RegisterTask(String URL, long N, Context context, EditText usernameEditText, TextView statusTextView, HttpClient httpclient, List<Button> buttons) {
         super();
         this.usernameEditText = usernameEditText;
         this.statusTextView = statusTextView;
         this.URL = URL;
         this.N = N;
         this.context = context;
+        this.httpclient = httpclient;
+        this.buttons = buttons;
     }
 
     @Override
     protected void onPreExecute() {
+        Utils.SetButtonsEnabled(buttons, false);
         // Do before authentication task
         Store store = new Store(context, N);
         if(!store.hasPrivateKeyStored()) {
@@ -56,6 +63,10 @@ public class RegisterTask extends AsyncTask<Void, Void, Void> {
 
         this.username = usernameEditText.getText().toString();
 
+        if(httpclient == null) {
+            this.httpclient = Utils.initHttpClient(context);
+        }
+
         statusTextView.setText("Trying to register user '" + username + "' with public key: " + Arrays.toString(publicKey) + "\n");
     }
 
@@ -68,13 +79,14 @@ public class RegisterTask extends AsyncTask<Void, Void, Void> {
     @Override
     protected void onPostExecute(Void v) {
         // Do sth depending on the result
+        Utils.SetButtonsEnabled(buttons, true);
         // TODO - popup?
     }
 
 
     private void register() {
         try {
-            HttpClient httpclient = new DefaultHttpClient();
+//            HttpClient httpclient = new DefaultHttpClient();
             HttpPost request = new HttpPost(URL + "register");
 
             StringBuilder payload = new StringBuilder("{\"username\": \"" + this.username + "\", \"public_key\": [" + this.publicKey[0]);

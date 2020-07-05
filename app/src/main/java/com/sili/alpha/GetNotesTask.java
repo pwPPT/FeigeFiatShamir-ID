@@ -1,6 +1,8 @@
 package com.sili.alpha;
 
+import android.content.Context;
 import android.os.AsyncTask;
+import android.widget.Button;
 import android.widget.TextView;
 
 import org.apache.http.HttpResponse;
@@ -16,27 +18,37 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 
 public class GetNotesTask extends AsyncTask<Void, Void, Boolean> {
 
     private String sessionId;
     private String URL;
     private HttpClient httpclient;
+    private Context context;
+    private List<Button> buttons;
 
     private TextView statusTextView;
 
-    public GetNotesTask(String URL, Session session, TextView statusTextView) {
+    public GetNotesTask(String URL, Session session, Context context, TextView statusTextView, HttpClient httpclient, List<Button> buttons) {
         super();
         this.sessionId = session.getSessionId();
         this.URL = URL;
         this.statusTextView = statusTextView;
+        this.httpclient = httpclient;
+        this.context = context;
+        this.buttons = buttons;
     }
 
     @Override
     protected void onPreExecute() {
+        Utils.SetButtonsEnabled(buttons, false);
         // Do before authentication task
         statusTextView.setText("Fetching notes...\n");
-        this.httpclient = new DefaultHttpClient();
+
+        if(this.httpclient == null) {
+            this.httpclient = Utils.initHttpClient(context);
+        }
     }
 
     @Override
@@ -87,5 +99,6 @@ public class GetNotesTask extends AsyncTask<Void, Void, Boolean> {
 
     @Override
     protected void onPostExecute(Boolean result) {
+        Utils.SetButtonsEnabled(buttons, true);
     }
 }
