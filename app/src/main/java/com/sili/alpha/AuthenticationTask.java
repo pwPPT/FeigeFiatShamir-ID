@@ -116,6 +116,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
             if(!res.isAuthorized) {
                 throw new AuthFailedException(-100, "Wrong private key!\n");
             }
+            session.setSessionId(res.sessionId);
             return res.sessionId;
         } catch(AuthFailedException e) {
             statusTextView.append(e.toString());
@@ -125,6 +126,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
 
     @Override
     protected void onPostExecute(String token) {
+        Utils.SetButtonsEnabled(buttons, true);
         // Do sth depending on the result
         if(token == null) { // AuthFailedException occurred
             statusTextView.append("Authentication failed.\n");
@@ -132,7 +134,6 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
         }
         statusTextView.append("Authentication succeed - token: " + token + "\n");
         session.setSessionId(token);
-        Utils.SetButtonsEnabled(buttons, true);
         // TODO - add new activity and move to it
     }
 

@@ -82,6 +82,5 @@ public class MainActivity extends AppCompatActivity {
         this.testAuthButton.setOnClickListener(v -> statusTextView.setText(""));
 
         this.postButton.setOnClickListener(v -> new GetSecretTask(URL, session, this.getApplicationContext(), statusTextView, httpclient, buttons));
-
     }
 }
