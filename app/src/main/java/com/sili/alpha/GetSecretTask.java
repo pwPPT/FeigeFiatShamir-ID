@@ -12,11 +12,15 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
-public class CreateNoteTask extends AsyncTask<Void, Void, Boolean> {
+public class GetSecretTask extends AsyncTask<Void, Void, Boolean> {
 
     private String sessionId;
     private String URL;
@@ -25,15 +29,13 @@ public class CreateNoteTask extends AsyncTask<Void, Void, Boolean> {
     private Context context;
     List<Button> buttons;
 
-    private EditText noteEditText;
     private TextView statusTextView;
 
-    public CreateNoteTask(String URL, Session session, Context context, EditText noteEditText, TextView statusTextView, HttpClient httpclient, List<Button> buttons) {
+    public GetSecretTask(String URL, Session session, Context context, TextView statusTextView, HttpClient httpclient, List<Button> buttons) {
         super();
         this.URL = URL;
         this.sessionId = session.getSessionId();
         this.session = session;
-        this.noteEditText = noteEditText;
         this.statusTextView = statusTextView;
         this.httpclient = httpclient;
         this.context = context;
@@ -44,7 +46,7 @@ public class CreateNoteTask extends AsyncTask<Void, Void, Boolean> {
     protected void onPreExecute() {
         Utils.SetButtonsEnabled(buttons, false);
         // Do before task
-        statusTextView.setText("Creating new note...\n");
+        statusTextView.setText("Fetching secret...\n");
 
         if(this.httpclient == null) {
             this.httpclient = Utils.initHttpClient(context);
@@ -54,13 +56,12 @@ public class CreateNoteTask extends AsyncTask<Void, Void, Boolean> {
     @Override
     protected Boolean doInBackground(Void... voids) {
         if(sessionId == null) {
-            statusTextView.append("There is no sessionId.");
+            statusTextView.append("Unauthorized!\n");
             return false;
         }
 
-        String note = noteEditText.getText().toString();
-        String url = URL + "notes";
-        String payload = "{\"session_id\": \"" + sessionId + "\", \"note\": \"" + note + "\"}";
+        String url = URL + "secret";
+        String payload = "{\"session_id\": \"" + sessionId + "\"}";
 
         try {
             HttpPost request = new HttpPost(url);
@@ -73,13 +74,24 @@ public class CreateNoteTask extends AsyncTask<Void, Void, Boolean> {
             HttpResponse response = this.httpclient.execute(request);
 
             if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                statusTextView.append("Note created.\n");
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                response.getEntity().writeTo(out);
+                String responseString = out.toString();
+                out.close();
+
+                // parse response
+                JSONObject resp = new JSONObject(responseString);
+                String secret = resp.getString("secret");
+                statusTextView.append("Secret: " + secret + "\n");
                 return true;
             } else {
-                statusTextView.append("Error occurred while creating note.");
+                statusTextView.append("Unauthorized! Cannot fetch secret!\n");
                 return false;
             }
         } catch(IOException e) {
+            e.printStackTrace();
+            return false;
+        } catch(JSONException e) {
             e.printStackTrace();
             return false;
         }
@@ -88,8 +100,5 @@ public class CreateNoteTask extends AsyncTask<Void, Void, Boolean> {
     @Override
     protected void onPostExecute(Boolean result) {
         Utils.SetButtonsEnabled(buttons, true);
-        if(result) {
-            new GetNotesTask(URL, session, context, statusTextView, httpclient, buttons).execute();
-        }
     }
 }

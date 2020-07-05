@@ -49,7 +49,6 @@ public class MainActivity extends AppCompatActivity {
     Button authButton;
     EditText usernameEditText;
     Button testAuthButton;
-    Button getButton;
     Button postButton;
 
     @Override
@@ -66,14 +65,12 @@ public class MainActivity extends AppCompatActivity {
         this.authButton = findViewById(R.id.authButton);
         this.usernameEditText = findViewById(R.id.userNameEditText);
         this.testAuthButton = findViewById(R.id.testButton);
-        this.getButton = findViewById(R.id.getButton);
         this.postButton = findViewById(R.id.postButton);
 
         List<Button> buttons = new ArrayList<>();
         buttons.add(registerButton);
         buttons.add(authButton);
         buttons.add(testAuthButton);
-        buttons.add(getButton);
         buttons.add(postButton);
 
         this.statusTextView.setText("");
@@ -84,17 +81,7 @@ public class MainActivity extends AppCompatActivity {
 
         this.testAuthButton.setOnClickListener(v -> statusTextView.setText(""));
 
-        this.getButton.setOnClickListener(v -> new GetNotesTask(URL, session, this.getApplicationContext(), statusTextView, httpclient, buttons));
-
-        this.postButton.setOnClickListener(v -> new CreateNoteTask(URL, session, this.getApplicationContext(), usernameEditText, statusTextView, httpclient, buttons));
+        this.postButton.setOnClickListener(v -> new GetSecretTask(URL, session, this.getApplicationContext(), statusTextView, httpclient, buttons));
 
     }
-
-    protected void setButtonsEnabled(boolean isEnabled) {
-        registerButton.setEnabled(isEnabled);
-        authButton.setEnabled(isEnabled);
-        testAuthButton.setEnabled(isEnabled);
-        getButton.setEnabled(isEnabled);
-    }
-
 }

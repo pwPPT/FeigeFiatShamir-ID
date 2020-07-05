@@ -114,7 +114,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
                 res = sendY(token, A, this.secret);
             }
             if(!res.isAuthorized) {
-                throw new AuthFailedException(-100, "Wrong private key!");
+                throw new AuthFailedException(-100, "Wrong private key!\n");
             }
             return res.sessionId;
         } catch(AuthFailedException e) {
@@ -158,7 +158,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
 
         HttpResponse response = post(url, payload);
         if(response == null) { // IOException occurred
-            throw new AuthFailedException(-1, "Connection problem - IOException in getToken.");
+            throw new AuthFailedException(-1, "Connection problem - IOException in getToken.\n");
         }
 
         try {
@@ -181,7 +181,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
                 int statusCode = statusLine.getStatusCode();
                 //Closes the connection.
                 response.getEntity().getContent().close();
-                throw new AuthFailedException(statusCode, URL + "token");
+                throw new AuthFailedException(statusCode, URL + "token\n");
             }
         } catch(IOException e) {
             e.printStackTrace();
@@ -207,7 +207,7 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
 
         HttpResponse response = post(url, payload);
         if(response == null) {  // IOException occurred
-            throw new AuthFailedException(-1, "Connection problem - IOException in sendX.");
+            throw new AuthFailedException(-1, "Connection problem - IOException in sendX.\n");
         }
 
         try {
@@ -232,14 +232,14 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
                 int statusCode = statusLine.getStatusCode();
                 //Closes the connection.
                 response.getEntity().getContent().close();
-                throw new AuthFailedException(statusCode, URL + "X");
+                throw new AuthFailedException(statusCode, URL + "X\n");
             }
         } catch(IOException e) {
             e.printStackTrace();
-            throw new AuthFailedException(-2, URL + e.getMessage());
+            throw new AuthFailedException(-2, URL + "X\n");
         } catch(JSONException e) {
             e.printStackTrace();
-            throw new AuthFailedException(-3, URL + e.getMessage());
+            throw new AuthFailedException(-3, URL + "X\n");
         }
     }
 
@@ -284,14 +284,14 @@ public class AuthenticationTask extends AsyncTask<Void, Void, String> {
                 int statusCode = statusLine.getStatusCode();
                 //Closes the connection.
                 response.getEntity().getContent().close();
-                throw new AuthFailedException(statusCode, URL + "Y");
+                throw new AuthFailedException(statusCode, URL + "Y\n");
             }
         } catch(IOException e) {
             e.printStackTrace();
-            throw new AuthFailedException(-2, URL + e.getMessage());
+            throw new AuthFailedException(-2, URL + "Y\n");
         } catch(JSONException e) {
             e.printStackTrace();
-            throw new AuthFailedException(-3, URL + e.getMessage());
+            throw new AuthFailedException(-3, URL + "Y\n");
         }
     }
 }
